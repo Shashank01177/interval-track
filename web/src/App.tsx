@@ -4,6 +4,7 @@ import { TimelineBar } from './components/TimelineBar';
 import { SessionCard } from './components/SessionCard';
 import { AppFilterChips } from './components/AppFilterChips';
 import { AppDetailModal } from './components/AppDetailModal';
+import { BatterySimulator } from './components/BatterySimulator';
 import { AppSummary } from './types';
 import {
   Smartphone,
@@ -12,13 +13,14 @@ import {
   ChevronRight,
   Search,
   Clock,
+  BatteryCharging,
+  Layers,
   Sparkles,
-  Download,
-  Terminal,
-  Activity
+  Download
 } from 'lucide-react';
 
 export function App() {
+  const [currentTab, setCurrentTab] = useState<'timeline' | 'battery'>('timeline');
   const [dayOffset, setDayOffset] = useState<number>(0);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -92,7 +94,7 @@ export function App() {
                 </span>
               </div>
               <p className="text-xs text-slate-400 hidden sm:block">
-                Monitors from which time to which time you open apps
+                App intervals & Battery full charge sound alarm
               </p>
             </div>
           </div>
@@ -130,7 +132,7 @@ export function App() {
         <div
           className={`w-full transition-all duration-300 ${
             phoneFrame
-              ? 'max-w-[430px] bg-[#090D16] border border-slate-800 rounded-[42px] p-4 shadow-2xl shadow-indigo-950/20 relative my-auto min-h-[820px] flex flex-col'
+              ? 'max-w-[430px] bg-[#090D16] border border-slate-800 rounded-[42px] p-4 shadow-2xl shadow-indigo-950/20 relative my-auto min-h-[840px] flex flex-col overflow-hidden'
               : 'max-w-4xl bg-[#090D16] border border-slate-800/80 rounded-3xl p-6 shadow-xl flex flex-col'
           }`}
         >
@@ -142,132 +144,168 @@ export function App() {
             </div>
           )}
 
-          {/* Subheader & Date Navigation */}
-          <div className="flex items-center justify-between mb-3 bg-[#111827] border border-slate-800/80 rounded-2xl p-2 px-3">
-            <button
-              onClick={() => setDayOffset(d => d - 1)}
-              className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-white">{formattedDate}</span>
-              {isToday && (
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              )}
-            </div>
-            <button
-              onClick={() => setDayOffset(d => Math.min(0, d + 1))}
-              disabled={isToday}
-              className={`p-1.5 rounded-lg transition-colors ${
-                isToday ? 'opacity-30 cursor-not-allowed text-slate-600' : 'hover:bg-slate-800 text-slate-400 hover:text-white'
-              }`}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+          {/* Tab Content */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {currentTab === 'battery' ? (
+              <BatterySimulator />
+            ) : (
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Subheader & Date Navigation */}
+                <div className="flex items-center justify-between mb-3 bg-[#111827] border border-slate-800/80 rounded-2xl p-2 px-3">
+                  <button
+                    onClick={() => setDayOffset(d => d - 1)}
+                    className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-white">{formattedDate}</span>
+                    {isToday && (
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setDayOffset(d => Math.min(0, d + 1))}
+                    disabled={isToday}
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      isToday ? 'opacity-30 cursor-not-allowed text-slate-600' : 'hover:bg-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
 
-          {/* Active Session Notification (if currently open) */}
-          {isToday && activeSession && (
-            <div className="mb-3 bg-gradient-to-r from-emerald-950/60 to-slate-900 border border-emerald-500/40 rounded-2xl p-3 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                </span>
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider font-bold text-emerald-400">
-                    Currently Open on Device
+                {/* Active Session Notification (if currently open) */}
+                {isToday && activeSession && (
+                  <div className="mb-3 bg-gradient-to-r from-emerald-950/60 to-slate-900 border border-emerald-500/40 rounded-2xl p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                      </span>
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider font-bold text-emerald-400">
+                          Currently Open on Device
+                        </div>
+                        <div className="text-sm font-bold text-white">
+                          {activeSession.appName}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const s = summaries.find(x => x.packageName === activeSession.packageName);
+                        if (s) setDetailSummary(s);
+                      }}
+                      className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 transition-colors"
+                    >
+                      Inspect
+                    </button>
                   </div>
-                  <div className="text-sm font-bold text-white">
-                    {activeSession.appName}
-                  </div>
+                )}
+
+                {/* 24-Hour Visual Gantt Timeline */}
+                <div className="mb-3">
+                  <TimelineBar
+                    sessions={allSessions}
+                    dayStartMs={dayStartMs}
+                    dayEndMs={dayEndMs}
+                    highlightPackage={selectedPackage}
+                  />
+                </div>
+
+                {/* App Filter Chips */}
+                <div className="mb-3">
+                  <AppFilterChips
+                    summaries={summaries}
+                    selectedPackage={selectedPackage}
+                    totalSessionsCount={allSessions.length}
+                    onSelect={pkg => setSelectedPackage(pkg)}
+                  />
+                </div>
+
+                {/* Search Box */}
+                <div className="relative mb-3">
+                  <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Search by app name..."
+                    className="w-full bg-[#111827] border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                {/* Feed Header */}
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    {selectedPackage
+                      ? `${summaries.find(s => s.packageName === selectedPackage)?.appName} Intervals`
+                      : 'Session Timeline'}{' '}
+                    <span className="text-slate-500">({filteredSessions.length} intervals)</span>
+                  </h2>
+
+                  {selectedPackage && (
+                    <button
+                      onClick={() => {
+                        const s = summaries.find(x => x.packageName === selectedPackage);
+                        if (s) setDetailSummary(s);
+                      }}
+                      className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
+                    >
+                      Deep Dive →
+                    </button>
+                  )}
+                </div>
+
+                {/* Chronological Session Cards Feed */}
+                <div className="flex-1 overflow-y-auto space-y-2.5 pr-1 max-h-[300px]">
+                  {filteredSessions.length === 0 ? (
+                    <div className="py-12 text-center text-slate-500 text-xs">
+                      No session intervals found.
+                    </div>
+                  ) : (
+                    filteredSessions.map(session => (
+                      <SessionCard
+                        key={session.id}
+                        session={session}
+                        onClickApp={() => {
+                          const s = summaries.find(x => x.packageName === session.packageName);
+                          if (s) setDetailSummary(s);
+                        }}
+                      />
+                    ))
+                  )}
                 </div>
               </div>
-              <button
-                onClick={() => {
-                  const s = summaries.find(x => x.packageName === activeSession.packageName);
-                  if (s) setDetailSummary(s);
-                }}
-                className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 transition-colors"
-              >
-                Inspect
-              </button>
-            </div>
-          )}
-
-          {/* 24-Hour Visual Gantt Timeline */}
-          <div className="mb-3">
-            <TimelineBar
-              sessions={allSessions}
-              dayStartMs={dayStartMs}
-              dayEndMs={dayEndMs}
-              highlightPackage={selectedPackage}
-            />
-          </div>
-
-          {/* App Filter Chips */}
-          <div className="mb-3">
-            <AppFilterChips
-              summaries={summaries}
-              selectedPackage={selectedPackage}
-              totalSessionsCount={allSessions.length}
-              onSelect={pkg => setSelectedPackage(pkg)}
-            />
-          </div>
-
-          {/* Search Box */}
-          <div className="relative mb-3">
-            <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search by app name..."
-              className="w-full bg-[#111827] border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-            />
-          </div>
-
-          {/* Feed Header */}
-          <div className="flex items-center justify-between mb-2 px-1">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              {selectedPackage
-                ? `${summaries.find(s => s.packageName === selectedPackage)?.appName} Intervals`
-                : 'Session Timeline'}{' '}
-              <span className="text-slate-500">({filteredSessions.length} intervals)</span>
-            </h2>
-
-            {selectedPackage && (
-              <button
-                onClick={() => {
-                  const s = summaries.find(x => x.packageName === selectedPackage);
-                  if (s) setDetailSummary(s);
-                }}
-                className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
-              >
-                Deep Dive →
-              </button>
             )}
           </div>
 
-          {/* Chronological Session Cards Feed */}
-          <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
-            {filteredSessions.length === 0 ? (
-              <div className="py-12 text-center text-slate-500 text-xs">
-                No session intervals found.
-              </div>
-            ) : (
-              filteredSessions.map(session => (
-                <SessionCard
-                  key={session.id}
-                  session={session}
-                  onClickApp={() => {
-                    const s = summaries.find(x => x.packageName === session.packageName);
-                    if (s) setDetailSummary(s);
-                  }}
-                />
-              ))
-            )}
+          {/* Bottom App Navigation Bar */}
+          <div className="mt-3 pt-2 border-t border-slate-800/80 grid grid-cols-2 gap-2">
+            <button
+              onClick={() => setCurrentTab('timeline')}
+              className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl text-xs font-bold transition-all ${
+                currentTab === 'timeline'
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                  : 'bg-[#111827] text-slate-400 hover:text-slate-200 border border-slate-800'
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+              <span>App Intervals</span>
+            </button>
+
+            <button
+              onClick={() => setCurrentTab('battery')}
+              className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl text-xs font-bold transition-all ${
+                currentTab === 'battery'
+                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+                  : 'bg-[#111827] text-slate-400 hover:text-slate-200 border border-slate-800'
+              }`}
+            >
+              <BatteryCharging className="w-4 h-4" />
+              <span>Charge Alarm</span>
+            </button>
           </div>
         </div>
       </main>
